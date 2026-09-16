@@ -52,6 +52,7 @@ public class CreatureAgent : MonoBehaviour
 
     CreatureVisual visualCache;
     WorldHistory historyCache;
+    SimulationClock clockCache;
 
     // Non-serialized cache fields go null after every domain reload (script
     // recompile) without Awake() re-running on pre-existing objects, which is
@@ -59,6 +60,7 @@ public class CreatureAgent : MonoBehaviour
     // re-fetch lazily instead of trusting Awake() to have set them once.
     CreatureVisual Visual => visualCache != null ? visualCache : (visualCache = GetComponent<CreatureVisual>());
     WorldHistory History => historyCache != null ? historyCache : (historyCache = FindFirstObjectByType<WorldHistory>());
+    SimulationClock Clock => clockCache != null ? clockCache : (clockCache = FindFirstObjectByType<SimulationClock>());
 
     void Start()
     {
@@ -84,7 +86,7 @@ public class CreatureAgent : MonoBehaviour
 
     void Update()
     {
-        Tick(Time.deltaTime);
+        Tick(Clock != null ? Clock.ScaledDeltaTime() : Time.deltaTime);
     }
 
     public void Tick(float dt)

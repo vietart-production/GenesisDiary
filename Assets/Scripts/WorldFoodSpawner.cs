@@ -10,10 +10,12 @@ public class WorldFoodSpawner : MonoBehaviour
     public float respawnInterval = 1.5f;
 
     float timer;
+    SimulationClock clockCache;
+    SimulationClock Clock => clockCache != null ? clockCache : (clockCache = FindFirstObjectByType<SimulationClock>());
 
     void Update()
     {
-        Tick(Time.deltaTime);
+        Tick(Clock != null ? Clock.ScaledDeltaTime() : Time.deltaTime);
     }
 
     public void Tick(float dt)

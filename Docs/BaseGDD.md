@@ -60,8 +60,20 @@ A procedural-cat prototype was previously explored (outside this repo) as proof 
 
 ## Current Repo Status (as of 2026-09-17)
 
-GenesisDiary is still an empty Unity URP scaffold — none of the systems above are implemented yet, including the cat prototype.
+No longer an empty scaffold. Implemented and committed so far (see git log for details):
+
+- **Rendering**: `Assets/Shaders/CreatureSDF.shader` + `CreatureVisual.cs` — creatures are fully procedural SDF unions (body/head/ears/legs/paws/tail) with a belly gradient and tabby stripe pattern, all driven by exposed parameters. No sprites or 3D models.
+- **Genetics**: `CreatureDNA.cs` — a serializable struct covering every morphology/color parameter, with `Random()` (hue-coherent coat colors, occasional 2/6-leg mutations) and `Crossbreed()` (random blend point per trait + mutation chance, shortest-arc hue mixing). Verified against real data: children's traits land between parents' with correct circular color blending.
+- **Simulation**: `CreatureAgent.cs` — wander/hunger/mating state machine driving each creature; `FoodSource.cs` + `WorldFoodSpawner.cs` stand in for the WORLD layer; `WorldHistory.cs` logs every birth/death with generation number.
+- **Selection pressure (the important part)**: `CreatureAgent.ApplyMorphology()` derives moveSpeed/energyDrainPerSecond/maxEnergy from the creature's own DNA (more/longer legs = faster, bigger body = more energy capacity but more upkeep) instead of fixed species-wide constants. Validated with a 240 simulated-second run: survivors' average traits drifted toward smaller bodies and longer legs relative to the random seed population — real emergent selection, not a scripted milestone.
+- **Time**: `SimulationClock.cs` — a single `speedMultiplier` knob consumed by `CreatureAgent`/`WorldFoodSpawner` instead of raw `Time.deltaTime`.
 
 ## Open Questions / Next Steps
 
-_(to be filled in as design discussion continues)_
+Roughly in priority order:
+
+1. **Playtested balance** — current `CreatureAgent` defaults are validated to *run* (population survives, breeds, drifts) but have not been playtested for fun/pacing by a human.
+2. **Speciation detection** — GDD section 11 wants populations that diverge far enough to be recorded as distinct species with an ancestry tree. Currently only `Generation` (lineage depth) is tracked, not trait-cluster divergence.
+3. **World/environment layer** — `WorldFoodSpawner` is a placeholder (food spawns uniformly at random). No terrain, water, or climate yet.
+4. **God/player intervention UI** — no player-facing controls exist yet (everything so far is driven by Editor scripts/RunCommand for testing). `SimulationClock.speedMultiplier` and food/creature placement are the first hooks a UI would call into.
+5. **Behavior genes** — DNA currently covers morphology/color only; GDD section 4 also wants behavior traits (aggression, sociality, etc.) once there's a reason for them to matter (predation, territory).
