@@ -11,7 +11,7 @@ GenesisDiary is a Unity project (Editor version **6000.0.64f1**, see `ProjectSet
 - `Assets/TutorialInfo/` holds Unity's built-in "Readme" asset/editor used by the default template's welcome screen — not project documentation.
 - There are no custom Assembly Definitions (`.asmdef`); scripts compile into the default `Assembly-CSharp` / `Assembly-CSharp-Editor` assemblies (see the two `.csproj` files at the repo root).
 - There is no `Tests` folder yet, even though `com.unity.test-framework` is a listed dependency.
-- **This directory is not currently a git repository.**
+- Git is initialized with a Unity-specific `.gitignore` (excludes `Library/`, `Temp/`, `Logs/`, `UserSettings/`, generated `.csproj`/`.sln`/`.slnx`, etc.) and Git LFS tracking (`.gitattributes`) for binary art assets — images, 3D models, audio, video, fonts.
 
 Because the project is essentially a blank slate, there is no established architecture to preserve yet — new scripts, folder structure, and scene organization can be set up as needed.
 
@@ -25,6 +25,7 @@ This is a Unity Editor project, not a CLI/npm-style toolchain — there are no `
   - Build: `Unity.exe -batchmode -projectPath . -buildTarget <target> -quit -logFile Logs/build.log`
   - Run tests once a `Tests` assembly exists: `Unity.exe -batchmode -projectPath . -runTests -testPlatform EditMode -testResults Logs/results.xml -quit`
 - `GenesisDiary.slnx` / `GenesisDiary.sln` (Unity-generated) open the C# scripts in Visual Studio / Rider; regenerate them from the Editor (Preferences → External Tools → Regenerate project files) rather than hand-editing, since Unity overwrites them.
+- **Unity MCP server is connected** (`.mcp.json` registers the relay binary at `~/.unity/relay/`, per Unity's `com.unity.ai.assistant` package). This lets Claude Code drive the running Unity Editor directly — manage scenes/GameObjects/assets/shaders, create and edit scripts, capture Scene/Game view screenshots, read the console, profile performance, and run arbitrary Editor C# via `Unity_RunCommand`. All tools are enabled in **Project Settings → AI → Unity MCP Server → Tools**; the Unity Editor must be open and the bridge running for these tools to work.
 
 ## Key package dependencies (`Packages/manifest.json`)
 
