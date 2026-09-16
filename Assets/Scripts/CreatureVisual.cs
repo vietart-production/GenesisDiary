@@ -136,6 +136,49 @@ public class CreatureVisual : MonoBehaviour
         edgeSoftness = dna.edgeSoftness;
     }
 
+    public CreatureDNA GetDNA()
+    {
+        return new CreatureDNA
+        {
+            bodyLength = bodyLength,
+            bodyWidth = bodyWidth,
+            headSize = headSize,
+            headOffsetX = headOffsetX,
+            headOffsetY = headOffsetY,
+
+            earHeight = earHeight,
+            earBaseWidth = earBaseWidth,
+            earSpacing = earSpacing,
+            earLean = earLean,
+
+            eyeSize = eyeSize,
+            noseSize = noseSize,
+
+            legCount = legCount,
+            legLength = legLength,
+            legThickness = legThickness,
+            legAttachY = legAttachY,
+            pawSize = pawSize,
+
+            tailLength = tailLength,
+            tailCurl = tailCurl,
+            tailThickness = tailThickness,
+
+            bodyColor = bodyColor,
+            rimColor = rimColor,
+            bellyColor = bellyColor,
+            bellyHeight = bellyHeight,
+            stripeColor = stripeColor,
+            stripeFreq = stripeFreq,
+            stripeStrength = stripeStrength,
+            eyeColor = eyeColor,
+            noseColor = noseColor,
+
+            smoothBlend = smoothBlend,
+            edgeSoftness = edgeSoftness,
+        };
+    }
+
     void Awake()
     {
         meshRenderer = GetComponent<MeshRenderer>();
