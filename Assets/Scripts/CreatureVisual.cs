@@ -26,9 +26,9 @@ public class CreatureVisual : MonoBehaviour
     [Header("Legs")]
     [Range(0, MaxLegs)] public int legCount = 4;
     public float legLength = 0.24f;
-    public float legThickness = 0.042f;
+    public float legThickness = 0.036f;
     public float legAttachY = -0.1f;
-    public float pawSize = 0.05f;
+    public float pawSize = 0.042f;
 
     [Header("Tail")]
     public float tailLength = 0.42f;
@@ -45,7 +45,7 @@ public class CreatureVisual : MonoBehaviour
     public Color bodyColor = new Color(0.92f, 0.55f, 0.28f);
     public Color rimColor = new Color(0.5f, 0.28f, 0.12f);
     public Color bellyColor = new Color(0.97f, 0.92f, 0.82f);
-    public float bellyHeight = 0.12f;
+    public float bellyHeight = 0.05f;
     public Color stripeColor = new Color(0.35f, 0.18f, 0.08f);
     public float stripeFreq = 14f;
     public float stripeStrength = 0.35f;
@@ -95,6 +95,46 @@ public class CreatureVisual : MonoBehaviour
     readonly Vector4[] legData = new Vector4[MaxLegs];
     Vector4 tailSeg1;
     Vector4 tailSeg2;
+
+    public void ApplyDNA(CreatureDNA dna)
+    {
+        bodyLength = dna.bodyLength;
+        bodyWidth = dna.bodyWidth;
+        headSize = dna.headSize;
+        headOffsetX = dna.headOffsetX;
+        headOffsetY = dna.headOffsetY;
+
+        earHeight = dna.earHeight;
+        earBaseWidth = dna.earBaseWidth;
+        earSpacing = dna.earSpacing;
+        earLean = dna.earLean;
+
+        eyeSize = dna.eyeSize;
+        noseSize = dna.noseSize;
+
+        legCount = dna.legCount;
+        legLength = dna.legLength;
+        legThickness = dna.legThickness;
+        legAttachY = dna.legAttachY;
+        pawSize = dna.pawSize;
+
+        tailLength = dna.tailLength;
+        tailCurl = dna.tailCurl;
+        tailThickness = dna.tailThickness;
+
+        bodyColor = dna.bodyColor;
+        rimColor = dna.rimColor;
+        bellyColor = dna.bellyColor;
+        bellyHeight = dna.bellyHeight;
+        stripeColor = dna.stripeColor;
+        stripeFreq = dna.stripeFreq;
+        stripeStrength = dna.stripeStrength;
+        eyeColor = dna.eyeColor;
+        noseColor = dna.noseColor;
+
+        smoothBlend = dna.smoothBlend;
+        edgeSoftness = dna.edgeSoftness;
+    }
 
     void Awake()
     {
