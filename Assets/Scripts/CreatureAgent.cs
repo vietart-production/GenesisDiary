@@ -11,29 +11,38 @@ using UnityEngine;
 // for deterministic testing - the Editor's Play-mode clock can't be trusted
 // to advance at real wall-clock speed when the window isn't focused.
 //
-// Default values below are validated by a 60 simulated-second population
-// test (12 start -> 21 born, 19 starved, 14 alive at end) - tune from here,
-// not from scratch; the original guessed defaults produced total die-offs.
+// Base* fields are species-wide baselines; actual moveSpeed/energyDrainPerSecond
+// /maxEnergy are DERIVED from this creature's own morphology (leg count/length,
+// body size) in ApplyMorphology(). This is what turns breeding into evolution:
+// a body plan that is faster or cheaper to run actually survives better, instead
+// of every creature having identical stats regardless of DNA.
 [RequireComponent(typeof(CreatureVisual))]
 public class CreatureAgent : MonoBehaviour
 {
-    [Header("Needs")]
+    [Header("Needs (species baseline)")]
     public float energy = 100f;
-    public float maxEnergy = 150f;
-    public float energyDrainPerSecond = 3f;
+    public float baseMaxEnergy = 150f;
+    public float baseEnergyDrainPerSecond = 3f;
     public float hungryThreshold = 80f;
     public float reproduceThreshold = 90f;
     public float reproduceCost = 30f;
     public float reproduceCooldown = 5f;
 
-    [Header("Movement")]
-    public float moveSpeed = 2.2f;
+    [Header("Movement (species baseline)")]
+    public float baseMoveSpeed = 2.2f;
     public float wanderRadius = 3f;
     public float senseRadius = 10f;
     public float interactRadius = 0.4f;
 
+    [Header("Lineage")]
+    public int Generation = 0;
+
     public bool Alive { get; private set; } = true;
     public float Cooldown { get; private set; }
+
+    [HideInInspector] public float maxEnergy;
+    [HideInInspector] public float moveSpeed;
+    [HideInInspector] public float energyDrainPerSecond;
 
     float decisionTimer;
     Vector3 originPoint;
@@ -42,17 +51,35 @@ public class CreatureAgent : MonoBehaviour
     Transform targetMate;
 
     CreatureVisual visualCache;
+    WorldHistory historyCache;
 
     // Non-serialized cache fields go null after every domain reload (script
     // recompile) without Awake() re-running on pre-existing objects, which is
-    // routine when driving the Editor via repeated RunCommand calls - so this
-    // re-fetches lazily instead of trusting Awake() to have set it once.
+    // routine when driving the Editor via repeated RunCommand calls - so these
+    // re-fetch lazily instead of trusting Awake() to have set them once.
     CreatureVisual Visual => visualCache != null ? visualCache : (visualCache = GetComponent<CreatureVisual>());
+    WorldHistory History => historyCache != null ? historyCache : (historyCache = FindFirstObjectByType<WorldHistory>());
 
     void Start()
     {
+        ApplyMorphology();
         originPoint = transform.position;
         PickWanderTarget();
+    }
+
+    /// Derives run-time stats from this creature's DNA-driven body shape. More/longer legs
+    /// raise moveSpeed (better at reaching food/mates); a bigger body raises both maxEnergy
+    /// (bigger reserve) and drain (more upkeep). Call after DNA is applied or changes.
+    public void ApplyMorphology()
+    {
+        var v = Visual;
+        float legFactor = Mathf.Lerp(0.55f, 1.35f, Mathf.InverseLerp(2, 6, v.legCount))
+            * Mathf.Lerp(0.8f, 1.25f, Mathf.InverseLerp(0.16f, 0.34f, v.legLength));
+        float sizeFactor = Mathf.Lerp(0.75f, 1.35f, Mathf.InverseLerp(0.5f, 0.85f, v.bodyLength));
+
+        moveSpeed = baseMoveSpeed * legFactor;
+        energyDrainPerSecond = baseEnergyDrainPerSecond * sizeFactor;
+        maxEnergy = baseMaxEnergy * Mathf.Lerp(0.85f, 1.2f, Mathf.InverseLerp(0.5f, 0.85f, v.bodyLength));
     }
 
     void Update()
@@ -105,6 +132,7 @@ public class CreatureAgent : MonoBehaviour
     /// GameObject alone is not enough - Alive is a separate internal flag Tick() checks first.
     public void Revive(float startEnergy)
     {
+        ApplyMorphology();
         Alive = true;
         Cooldown = 0f;
         decisionTimer = 0f;
@@ -248,16 +276,19 @@ public class CreatureAgent : MonoBehaviour
         childVisual.ApplyDNA(childDna);
 
         var childAgent = go.GetComponent<CreatureAgent>();
-        childAgent.Revive(childAgent.maxEnergy * 0.5f);
+        childAgent.Generation = Mathf.Max(Generation, mate.Generation) + 1;
+        childAgent.Revive(childAgent.baseMaxEnergy * 0.5f);
         childAgent.Cooldown = childAgent.reproduceCooldown;
 
-        Debug.LogFormat("{0} + {1} bred {2}", name, mate.name, go.name);
+        History?.RecordBirth(go.name, childAgent.Generation);
+        Debug.LogFormat("{0} + {1} bred {2} (gen {3})", name, mate.name, go.name, childAgent.Generation);
     }
 
     void Die()
     {
         Alive = false;
-        Debug.LogFormat("{0} died of starvation at {1}", name, transform.position);
+        History?.RecordDeath(name, Generation);
+        Debug.LogFormat("{0} (gen {1}) died of starvation at {2}", name, Generation, transform.position);
         gameObject.SetActive(false);
     }
 }
