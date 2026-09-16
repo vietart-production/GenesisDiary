@@ -27,6 +27,13 @@ This is a Unity Editor project, not a CLI/npm-style toolchain — there are no `
 - `GenesisDiary.slnx` / `GenesisDiary.sln` (Unity-generated) open the C# scripts in Visual Studio / Rider; regenerate them from the Editor (Preferences → External Tools → Regenerate project files) rather than hand-editing, since Unity overwrites them.
 - **Unity MCP server is connected** (`.mcp.json` registers the relay binary at `~/.unity/relay/`, per Unity's `com.unity.ai.assistant` package). This lets Claude Code drive the running Unity Editor directly — manage scenes/GameObjects/assets/shaders, create and edit scripts, capture Scene/Game view screenshots, read the console, profile performance, and run arbitrary Editor C# via `Unity_RunCommand`. All tools are enabled in **Project Settings → AI → Unity MCP Server → Tools**; the Unity Editor must be open and the bridge running for these tools to work.
 
+### Known Unity MCP quirks (discovered empirically)
+
+- **`Unity_Camera_Capture` can return a stale/cached frame in Edit mode**, even after `MaterialPropertyBlock`/field changes and `SceneView.RepaintAll()`. Workaround: enter Play mode (`Unity_ManageEditor` Action=`Play`), wait a couple seconds, capture, then `Stop`. Play-mode captures are reliably fresh.
+- **Calling `Unity_RunCommand` while already in Play mode restarts the Play session** (compiles a temp assembly → triggers a domain reload → Play state resets to time-zero / edit-mode-serialized field values). You cannot "sleep N seconds then RunCommand-check progress" during Play — every RunCommand call re-zeroes elapsed play time. To observe a running simulation, either capture once right after entering Play (no RunCommand calls in between) or verify logic analytically/in Edit mode instead of live-polling during Play.
+- `Unity_ManageScript`'s `apply_text_edits`/`edit` actions with `anchor`-based inserts have repeatedly no-op'd in practice; `action: "update"` with full file contents (plus `precondition_sha256` from `get_sha`) has been the reliable path for script edits.
+- GameObject/Camera `instanceID`s change across domain reloads — re-`find` by name rather than reusing a cached instance ID after any script compile.
+
 ## Key package dependencies (`Packages/manifest.json`)
 
 Worth knowing when adding features, since they indicate available APIs:
